@@ -110,14 +110,26 @@ public:
 	{
 		static_assert(sizeof...(Ts) > 0, "View requires at least one component type");
 
-		// Pick the smallest array to iterate - avoids looping over large arrays
-		// when a rare component narrows the candidate set drastically
-		
-		ComponentArray<uint8_t>* smallest = FindSmallest<Ts...>();
-		(void)smallest; // used only for size compare; iteration is below
+		// Build a tuple of pointers to each ComponentArray 
+		// resolved once here, not on every iteration
+		auto arrays = std::make_tuple(&m_store.GetArray<Ts>()...);
 
-		// Iterate the smallest array by dispatching to the right typed overload
-		IterateSmallest<Func, Ts...>(std::forward<Func>(func));
+		// Find the index of the smallest array among Ts... at compile time using a fold over an index sequence
+		constexpr size_t N = sizeof...(Ts);
+		size_t sizes[N] = { m_store.GetArray<Ts>().Count()... };
+
+		size_t smallestIdx = 0;
+		for (size_t i = 1; i < N; ++i)
+			if (sizes[i] < sizes[smallestIdx])
+				smallestIdx = i; 
+
+		// Dispatch to the typed iterator for whichever index is smallest
+		IterateAt<Func, Ts...>(
+			smallestIdx,
+			arrays,
+			std::forward<Func>(func),
+			std::index_sequence_for<Ts...>{}
+		);s
 	}
 
 	// Struct-based view for range-for loops (single component only)
@@ -138,9 +150,59 @@ private:
 
 	// View internals
 
+	// Entry point: given a runtime smallestIdx, walk the index sequence 
+	// and call the right typed overload via if constexpr
+	template<typename Func, typename... Ts, size_t... Is>
+	void IterateAt(
+		size_t smallestIdx,
+		std::tuple<ComponentArray<Ts>*...>& arrays,
+		Func&& func,
+		std::index_sequence<Is...>
+	)
+	{
+		// Expands to: if (smallestIdx == 0) IterateOver<0, Ts...>(...);
+		//             if (smallestIdx == 1) IterateOver<1, Ts...>(...);
+		//             ...
+		// Only one branch executes; the rest are compiled away.
+		(void)std::initializer_list<int>
+		{
+			(smallestIdx == Is
+				? (IterateOver<Is, Func, Ts...>(arrays, std::forward<Func>(func), std::index_sequence_for<Ts...>{}), 0)
+				: 0)...
+		};
+	}
+
+	// Core loop: iterate array[PivotIdx], check all others via Has<>
+	template<size_t PivotIdx, typename Func, typename... Ts, size_t... Is>
+	void IterateOver(
+		std::tuple<ComponentArray<Ts>*...>& arrays,
+		Func&& func,
+		std::index_sequence<Is...>
+	)
+	{
+		using PivotType = std::tuple_element_t<PivotIdx, std::tuple<Ts...>>;
+
+		auto* pivotArray = std::get<PivotIdx>(arrays);
+		const auto& entities = pivotArray->GetEntities();
+
+		for (uint32_t i = 0; i < pivotArray->Count(); ++i)
+		{
+			Entity entity = entities[i];
+
+			// Check every array EXCEPT the pivot - it already
+			// has the entity by definition
+			bool allMatch = ((Is == PivotIdx || std::get<Is>(arrays)->Has(entity)) && ...);
+			if (!allMatch) continue;
+
+			// Call func(entity, component0&, component1&...)
+			// Each component is fetched from its own array - no branch on pivot
+			func(entity, std::get<Is>(arrays)->Get(entity)...);
+		}
+	}
+
+
 	// Returns the size of the smallest component array among Ts...
 	// Used to pick which array to iterate.
-
 	template<typename... Ts>
 	uint32_t SmallestSize() const
 	{
