@@ -1,23 +1,27 @@
-#include <iostream>
+#include "core/Application.h"
+#include "scenes/MainMenuScene.h"
 
-#include "raylib.h"
+class Game : public Application
+{
+public:
+	Game() : Application({"Game", 1280, 720}) {}
+
+protected:
+	void OnStart() override
+	{
+		GetSceneManager().Push<MainMenuScene>(GetRegistry(), GetAssets());
+	}
+
+	void OnUpdate(float deltaTime) override
+	{
+		if (GetInput().IsKeyPressed(KEY_F11))
+			ToggleFullscreen();
+	}
+};
 
 int main()
 {
-	InitWindow(800, 600, "Game");
-
-	while (!WindowShouldClose())
-	{
-		// Update
-
-		// Draw
-
-		BeginDrawing();
-		ClearBackground(WHITE);
-
-		EndDrawing();
-	}
-	CloseWindow();
-
+	Game game;
+	game.Run();
 	return 0;
 }
