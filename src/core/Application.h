@@ -1,11 +1,11 @@
 #pragma once
-#include "ecs/Registry.h"
-#include "scene/SceneManager.h"
-#include "assets/AssetManager.h"
-#include "systems/RenderSystem.h"
-#include "systems/InputSystem.h"
-#include "systems/PhysicsSystem.h"
-#include "systems/AudioSystem.h"
+#include "../ecs/Registry.h"
+#include "../scene/SceneManager.h"
+#include "../assets/AssetManager.h"
+#include "../systems/RenderSystem.h"
+#include "../systems/InputSystem.h"
+#include "../systems/PhysicsSystem.h"
+#include "../systems/AudioSystem.h"
 
 struct AppConfig
 {

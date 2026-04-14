@@ -129,7 +129,7 @@ public:
 			arrays,
 			std::forward<Func>(func),
 			std::index_sequence_for<Ts...>{}
-		);s
+		);
 	}
 
 	// Struct-based view for range-for loops (single component only)
@@ -199,59 +199,4 @@ private:
 			func(entity, std::get<Is>(arrays)->Get(entity)...);
 		}
 	}
-
-
-	// Returns the size of the smallest component array among Ts...
-	// Used to pick which array to iterate.
-	template<typename... Ts>
-	uint32_t SmallestSize() const
-	{
-		uint32_t sizes[] = { m_store.GetArray<Ts>().Count()... };
-		return *std::min_element(std::begin(sizes), std::end(sizes));
-	}
-
-	template<typename Func, typename First, typename... Rest>
-	void IterateSmallest(Func&& func)
-	{
-		uint32_t firstSize = m_store.GetArray<First>().Count();
-
-		// If another type's array is smaller, rotate and retry
-		// This expands to a compile-time chain of size comparisons
-
-		if constexpr (sizeof...(Rest) > 0)
-		{
-			if (ShouldRotate<First, Rest...>())
-			{
-				IterateSmallest<Func, Rest..., First>(std::forward<Func>(func));
-				return;
-			}
-		}
-
-		// First is the smallest; iterate it and filter by Rest...
-		auto& firstArray = m_store.GetArray<First>();
-		auto& entities = firstArray.GetEntities(); // parallel entity array
-
-		for (uint32_t i = 0; i < firstArray.Count(); ++i)
-		{
-			Entity e = entities[i];
-			if ((m_store.Has<Rest>(e) && ...))
-			{
-				func(e, firstArray.Data()[i], m_store.Get<Rest>(e)...);
-			}	
-		}
-	}
-
-	// Returns true if any type in Rest... has a smaller array than First
-
-	template<typename First, typename... Rest>
-	bool ShouldRotate() const
-	{
-		uint32_t firstSize = m_store.GetArray<First>().Count();
-		uint32_t restSizes[] = { m_store.GetArray<Rest>().Count()... };
-		for (uint32_t s : restSizes)
-			if (s < firstSize) return true;
-		return false;
-	}
-	
-
 };

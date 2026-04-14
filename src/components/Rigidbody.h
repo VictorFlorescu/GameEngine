@@ -23,7 +23,7 @@ struct Rigidbody
 	void AddImpulse(Vector3 impulse)
 	{
 		if (type == BodyType::Static) return;
-		velocity = Vector3Add(velocity, VEctor3Scale(impulse, 1.0f / mass));
+		velocity = Vector3Add(velocity, Vector3Scale(impulse, 1.0f / mass));
 	}
 
 	// Apply a continuous force (integrated over deltaTime in PhysicsSystem)

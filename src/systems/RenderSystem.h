@@ -1,7 +1,7 @@
 #pragma once
-#include "ecs/Registry.h"
-#include "assets/AssetManager.h"
-#include "components/Components.h"
+#include "../ecs/Registry.h"
+#include "../assets/AssetManager.h"
+#include "../components/Components.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
@@ -42,11 +42,11 @@ private:
 
 	void Draw3D()
 	{
-		if (!m_has3D) return;
+		if (!m_has3D || !m_registry) return;
 
 		BeginMode3D(m_camera3D);
 
-		m_registry->View<Transform, MeshRenderer>([](Entity e, Transform& t, MeshRenderer& mr)
+		m_registry->View<Spatial, MeshRenderer>([](Entity e, Spatial& t, MeshRenderer& mr)
 		{
 			if (!mr.visible) return;
 
@@ -70,7 +70,7 @@ private:
 
 	struct SpriteDrawCmd
 	{
-		Transform* transform;
+		Spatial* transform;
 		Sprite* sprite;
 		int layer;
 	};
@@ -81,14 +81,14 @@ private:
 		std::vector<SpriteDrawCmd> cmds;
 		cmds.reserve(128);
 
-		m_registry->View<Transform, Sprite>([&](Entity e, Transform& t, Sprite s)
+		m_registry->View<Spatial, Sprite>([&](Entity e, Spatial& t, Sprite s)
 			{
 				if (!s.visible) return;
 				cmds.push_back({ &t, &s, s.layer });
 			});
 
 		// Sort by layer - stable_sort preserves submittion order within a layer
-		std::stable_sort(cmds.begin(), cmds.end, [](const SpriteDrawCmd& a, const SpriteDrawCmd& b)
+		std::stable_sort(cmds.begin(), cmds.end(), [](const SpriteDrawCmd& a, const SpriteDrawCmd& b)
 			{
 				return a.layer < b.layer;
 			});
@@ -97,7 +97,7 @@ private:
 
 		for (auto& cmd : cmds)
 		{
-			Transform& t = *cmd.transform;
+			Spatial& t = *cmd.transform;
 			Sprite& s = *cmd.sprite;
 
 			Rectangle src = s.GetSrcRect();
@@ -119,12 +119,10 @@ private:
 		}
 
 		if (m_has2D) EndMode2D();
-
-		// UI pass - drawn after everything, no camera transform
-
-		void DrawUI()
-		{
-			//PLACEHOLDER
-		}
+	}
+	 // UI pass
+	void DrawUI()
+	{
+		//PLACEHOLDER
 	}
 };

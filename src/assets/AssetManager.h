@@ -47,7 +47,7 @@ public:
 	}
 	Model& LoadModel(const std::string& path)
 	{
-		return LoadOrGet(m_models, path, [](const std::string& p) 
+		return LoadOrGet(m_models, path, [this](const std::string& p) 
 			{
 			return LoadModel(p.c_str());
 			});
@@ -109,9 +109,10 @@ public:
 	}
 
 	// Exists - check without asserting
-	bool HasTexture(const std::string& path) const { return m_textures.count(path) }
-	bool HasSound(const std::string& path) const { return m_sounds.count(path) }
-	bool HasModel(const std::string& path) const { return m_models.count(path) }
+	bool HasTexture(const std::string& path) const { return m_textures.count(path) > 0; }
+	bool HasSound(const std::string& path) const { return m_sounds.count(path) > 0; }
+	bool HasModel(const std::string& path) const { return m_models.count(path) > 0; }
+	bool HasMusic(const std::string& path) const { return m_music.count(path) > 0; }
 
 private:
 	std::unordered_map<std::string, Texture2D> m_textures;

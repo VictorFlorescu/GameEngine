@@ -44,7 +44,7 @@ void Application::Tick(float deltaTime)
 {
 	// Fixed system order - PreUpdate -> Update -> Render
 	m_input.Update();
-	m_sceneManager.Update(deltaTime, m_registry); // handles transitions
+	m_sceneManager.Update(deltaTime, m_registry, m_assets); // handles transitions
 	m_physics.Update(deltaTime);
 	OnUpdate(deltaTime);
 	m_audio.Update();

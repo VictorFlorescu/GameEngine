@@ -9,6 +9,14 @@ public:
 protected:
 	void OnStart() override
 	{
+		GetRegistry().RegisterComponents<
+			Spatial,
+			Sprite,
+			MeshRenderer,
+			Rigidbody,
+			AudioSource
+		>();
+
 		GetSceneManager().Push<MainMenuScene>(GetRegistry(), GetAssets());
 	}
 
