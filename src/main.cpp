@@ -1,5 +1,6 @@
 #include "core/Application.h"
 #include "scenes/MainMenuScene.h"
+#include "scenes/GameplayScene.h"
 
 class Game : public Application
 {
@@ -14,10 +15,12 @@ protected:
 			Sprite,
 			MeshRenderer,
 			Rigidbody,
-			AudioSource
+			AudioSource,
+			BoxCollider,
+			Camera2DComponent
 		>();
 
-		GetSceneManager().Push<MainMenuScene>(GetRegistry(), GetAssets());
+		GetSceneManager().Push<GameplayScene>(GetRegistry(), GetAssets());
 	}
 
 	void OnUpdate(float deltaTime) override
