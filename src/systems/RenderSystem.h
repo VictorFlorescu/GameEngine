@@ -77,11 +77,28 @@ private:
 
 	void Draw2D()
 	{
+		Camera2D activeCamera = { 0 };
+		bool useCamera = false;
+
+		m_registry->View<Spatial, Camera2DComponent>([&](Entity e, Spatial& t, Camera2DComponent& cam)
+			{
+				if (cam.isMain)
+				{
+					// map the ecs component data into raylib's camera
+					activeCamera.target = { t.position.x, t.position.y };
+					activeCamera.offset = cam.offset;
+					activeCamera.rotation = t.rotation.z;
+					activeCamera.zoom = cam.zoom;
+					useCamera = true;
+				}
+			}
+		);
+
 		// Collect all visible sprites into draw commands
 		std::vector<SpriteDrawCmd> cmds;
 		cmds.reserve(128);
 
-		m_registry->View<Spatial, Sprite>([&](Entity e, Spatial& t, Sprite s)
+		m_registry->View<Spatial, Sprite>([&](Entity e, Spatial& t, Sprite& s)
 			{
 				if (!s.visible) return;
 				cmds.push_back({ &t, &s, s.layer });
@@ -93,7 +110,7 @@ private:
 				return a.layer < b.layer;
 			});
 
-		if (m_has2D) BeginMode2D(m_camera2D);
+		if (useCamera) BeginMode2D(activeCamera);
 
 		for (auto& cmd : cmds)
 		{
@@ -118,7 +135,7 @@ private:
 			DrawTexturePro(s.texture, src, dst, origin, t.rotation.z, s.tint);
 		}
 
-		if (m_has2D) EndMode2D();
+		if (useCamera) EndMode2D();
 	}
 	 // UI pass
 	void DrawUI()
