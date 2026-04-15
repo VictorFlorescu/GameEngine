@@ -60,6 +60,14 @@ public:
 		assert(it != m_arrays.end() && "Component type not registered");
 		return static_cast<ComponentArray<T>&>(*it->second);
 	}
+	template<typename T>
+	const ComponentArray<T>& GetArray() const
+	{
+		auto key = std::type_index(typeid(T));
+		auto it = m_arrays.find(key);
+		assert(it != m_arrays.end() && "Component type not registered");
+		return static_cast<const ComponentArray<T>&>(*it->second);
+	}
 
 private:
 	uint32_t m_maxEntities;

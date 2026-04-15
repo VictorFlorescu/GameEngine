@@ -12,18 +12,20 @@ struct Rigidbody
 	float mass = 1.0f;
 	float drag = 0.01f; // linear damping per second
 	float angularDrag = 0.05f;
-	float restiturion = 0.3f; // bounciness [0..1]
+	float restitution = 0.3f; // bounciness [0..1]
 	float friction = 0.5f;
 
 	BodyType type = BodyType::Dynamic;
 	bool useGravity = true;
 	bool isSleeping = false;
+	bool canSleep = true;
 
 	// Apply an instantaneous impulse (mass-independent force)
 	void AddImpulse(Vector3 impulse)
 	{
 		if (type == BodyType::Static) return;
 		velocity = Vector3Add(velocity, Vector3Scale(impulse, 1.0f / mass));
+		isSleeping = false;
 	}
 
 	// Apply a continuous force (integrated over deltaTime in PhysicsSystem)
@@ -31,6 +33,7 @@ struct Rigidbody
 	{
 		if (type == BodyType::Static) return;
 		acceleration = Vector3Add(acceleration, Vector3Scale(force, 1.0f / mass));
+		isSleeping = false;
 	}
 
 	float InverseMass() const
