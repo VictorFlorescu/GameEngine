@@ -6,3 +6,4 @@
 #include "AudioSource.h"
 #include "BoxCollider.h"
 #include "Camera2DComponent.h"
+#include "Camera3DComponent.h"

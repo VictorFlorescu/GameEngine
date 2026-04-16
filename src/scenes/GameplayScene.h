@@ -46,8 +46,8 @@ public:
 		Entity wall = registry.Create();
 
 		auto& wSpatial = registry.Emplace<Spatial>(wall);
-		wSpatial.position = { 800.0f, 360.0f, 0.0f }; // Place on the right
-		wSpatial.scale = { 2.0f, 6.0f, 1.0f }; // Make it a tall rectangle
+		wSpatial.position = { 100.0f, 400.0f, 0.0f }; // Place on the right
+		wSpatial.scale = { 12.0f, 1.0f, 1.0f }; // Make it a tall rectangle
 
 		auto& wSprite = registry.Emplace<Sprite>(wall);
 		wSprite.texture = assets.LoadTexture(fullPath);
@@ -77,8 +77,8 @@ public:
 
 			if (IsKeyPressed(KEY_SPACE))
 			{
-				// Dash to the right
-				rb.AddImpulse({ 1500.0f, 0.0f, 0.0f });
+				// jump
+				rb.AddImpulse({ 0.0f, -1500.0f, 0.0f });
 			}
 
 			

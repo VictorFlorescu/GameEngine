@@ -12,7 +12,7 @@ struct AppConfig
 	const char* title = "Game";
 	int width = 1280;
 	int height = 720;
-	int fps = 60;
+	int fps = 144;
 };
 
 class Application
@@ -38,6 +38,7 @@ private:
 	void Init();
 	void Shutdown();
 	void Tick(float deltaTime);
+	void DrawEntityInspector();
 
 	AppConfig m_config;
 	Registry m_registry;
@@ -48,4 +49,8 @@ private:
 	InputSystem m_input;
 	AudioSystem m_audio;
 	bool m_running = false;
+
+	bool m_showDebugTools = false;
+	bool m_cursorWasHidden = false;
+	Entity m_selectedEntity = Entity::Null;
 };

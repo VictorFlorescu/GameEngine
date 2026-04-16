@@ -11,7 +11,9 @@ class RenderSystem
 {
 public:
 	RenderSystem() = default;
-	RenderSystem(Registry* registry, AssetManager* assets) : m_registry(registry), m_assets(assets) {}
+	explicit RenderSystem(Registry* registry, AssetManager* assets) : m_registry(registry), m_assets(assets) {}
+
+	bool showDebug = false;
 
 	// Call once at startup if you need a 3D camera
 	void SetCamera3D(Camera3D cam) { m_camera3D = cam; m_has3D = true; }
@@ -42,26 +44,40 @@ private:
 
 	void Draw3D()
 	{
-		if (!m_has3D || !m_registry) return;
+		if (!m_registry) return;
 
-		BeginMode3D(m_camera3D);
+
+		Camera3D activeCamera = { 0 };
+		bool useCamera = false;
+
+		m_registry->View<Spatial, Camera3DComponent>([&](Entity e, Spatial& t, Camera3DComponent& cam)
+			{
+				if (cam.isMain)
+				{
+					activeCamera.position = t.position;
+					activeCamera.target = cam.target;
+					activeCamera.up = cam.up;
+					activeCamera.fovy = cam.fovy;
+					activeCamera.projection = cam.projection;
+					useCamera = true;
+				}
+			});
+
+		if (!useCamera) return; // skip pass if no 3D camera exists
+
+		BeginMode3D(activeCamera);
 
 		m_registry->View<Spatial, MeshRenderer>([](Entity e, Spatial& t, MeshRenderer& mr)
 		{
 			if (!mr.visible) return;
 
-			// Build a transform matrix from position/rotation/scale
-			// and draw the model using it directly
+			mr.model.transform = t.GetMatrix();
 
-			DrawModelEx(
-				mr.model,
-				t.position,
-				{ 0.f, 1.f, 0.f }, // rotation axis (Y up)
-				t.rotation.y, // primary rotation angle
-				t.scale,
-				mr.tint
-			);
+			DrawModel(mr.model, { 0.0f, 0.0f,0.0f }, 1.0f, mr.tint);
+
 		});
+
+		DrawGrid(20, 10.0f);
 
 		EndMode3D();
 	}
@@ -133,6 +149,44 @@ private:
 			origin.y *= t.scale.y;
 
 			DrawTexturePro(s.texture, src, dst, origin, t.rotation.z, s.tint);
+		}
+
+		if (showDebug)
+		{
+			// draw hitboxes
+			m_registry->View<Spatial, BoxCollider>([&](Entity e, Spatial& t, BoxCollider& col)
+				{
+					float w = col.width * t.scale.x;
+					float h = col.height * t.scale.y;
+					float x = (t.position.x + col.offset.x) - (w / 2.0f);
+					float y = (t.position.y + col.offset.y) - (h / 2.0f);
+
+					// Triggers are yellow, solid colliders are green
+
+					Color color = col.isTrigger ? YELLOW : GREEN;
+
+					DrawRectangleLinesEx({ x,y,w,h }, 2.0f, color);
+
+					// Draw a tiny crosshair at the center of mass
+					DrawCircle(t.position.x, t.position.y, 2.0f, BLUE);
+				});
+			// draw velocity vectors
+			m_registry->View<Spatial, Rigidbody>([&](Entity e, Spatial& t, Rigidbody& rb)
+				{
+					if (Vector3LengthSqr(rb.velocity) > 0.1f)
+					{
+						Vector2 start = { t.position.x, t.position.y };
+
+						// multiply by 0.5f so a big speed doesnt draw a line of the screen
+						Vector2 end =
+						{
+							t.position.x + (rb.velocity.x * 0.5f),
+							t.position.y + (rb.velocity.y * 0.5f),
+						};
+
+						DrawLineEx(start, end, 2.0f, RED);
+					}
+				});
 		}
 
 		if (useCamera) EndMode2D();

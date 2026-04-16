@@ -18,9 +18,9 @@ struct Spatial
 		Matrix rz = MatrixRotateZ(DEG2RAD * rotation.z);
 		Matrix s = MatrixScale(scale.x, scale.y, scale.z);
 
-		Matrix r = MatrixMultiply(MatrixMultiply(ry, rx), rz);
-		Matrix rs = MatrixMultiply(r, s);
-		return MatrixMultiply(t, rs);
+		Matrix r = MatrixMultiply(rx, MatrixMultiply(ry, rz));
+		Matrix rs = MatrixMultiply(s, r);
+		return MatrixMultiply(rs, t);
 	}
 
 	Vector3 Forward() const

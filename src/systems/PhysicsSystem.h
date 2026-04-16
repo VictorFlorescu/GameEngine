@@ -16,7 +16,7 @@ public:
 
 	// Global gravity applied to all dynamic bodies with useGravity = true
 
-	Vector3 gravity = { 0.0f, -9.81f, 0.0f };
+	Vector3 gravity = { 0.0f, 981.0f, 0.0f };
 
 	void Update(float deltaTime)
 	{

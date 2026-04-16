@@ -1,6 +1,7 @@
 #include "core/Application.h"
 #include "scenes/MainMenuScene.h"
 #include "scenes/GameplayScene.h"
+#include "scenes/Sandbox3DScene.h"
 
 class Game : public Application
 {
@@ -17,7 +18,8 @@ protected:
 			Rigidbody,
 			AudioSource,
 			BoxCollider,
-			Camera2DComponent
+			Camera2DComponent,
+			Camera3DComponent
 		>();
 
 		GetSceneManager().Push<GameplayScene>(GetRegistry(), GetAssets());
