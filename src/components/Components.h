@@ -7,3 +7,5 @@
 #include "BoxCollider.h"
 #include "Camera2DComponent.h"
 #include "Camera3DComponent.h"
+#include "Animator2D.h"
+#include "ParticleEmitter.h"

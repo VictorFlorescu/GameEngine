@@ -151,6 +151,14 @@ private:
 			DrawTexturePro(s.texture, src, dst, origin, t.rotation.z, s.tint);
 		}
 
+		m_registry->View<Spatial, ParticleEmitter>([&](Entity e, Spatial& t, ParticleEmitter& emitter)
+			{
+				for (const Particle& p : emitter.particles)
+				{
+					DrawRectangle(p.position.x, p.position.y, 4, 4, p.color);
+				}
+			});
+
 		if (showDebug)
 		{
 			// draw hitboxes

@@ -13,9 +13,17 @@ public:
 	{
 		std::string resPath = RESOURCES_PATH;
 		std::string fullPath = resPath + "demo_texture.png";
+		std::string playerAnimPath = resPath + "playerAnim.png";
 
 		// create player entity
 		player = registry.Create();
+
+		auto& anim = registry.Emplace<Animator2D>(player);
+		anim.loop = true;
+		anim.columns = 8;
+		anim.rows = 1;
+		anim.totalFrames = anim.columns * anim.rows;
+		anim.frameTime = 0.3f;
 
 		// Setup Spatial (pos and scale)
 		auto& spatial = registry.Emplace<Spatial>(player);
@@ -24,7 +32,7 @@ public:
 
 		// Setup Sprite
 		auto& sprite = registry.Emplace<Sprite>(player);
-		sprite.texture = assets.LoadTexture(fullPath);
+		sprite.texture = assets.LoadTexture(playerAnimPath);
 		sprite.origin = { 0.5f, 0.5f };
 
 		// Setup RigidBody
@@ -60,6 +68,62 @@ public:
 
 		// ADD THE COLLIDER
 		registry.Emplace<BoxCollider>(wall);
+
+		// --- 3. CREATE A TRIGGER ZONE (e.g., A Coin) ---
+		Entity coin = registry.Create();
+
+		auto& cSpatial = registry.Emplace<Spatial>(coin);
+		cSpatial.position = { 500.0f, 360.0f, 0.0f }; // Place it between the player and the wall
+		cSpatial.scale = { 1.0f, 1.0f, 1.0f };
+
+		auto& cSprite = registry.Emplace<Sprite>(coin);
+		cSprite.texture = assets.LoadTexture(fullPath);
+		cSprite.tint = YELLOW; // Make it yellow so we know it's a pickup
+		cSprite.origin = { 0.5f, 0.5f };
+
+		// Triggers don't necessarily need Rigidbodies if they are static, 
+		// but the physics system requires both right now to check collisions.
+		auto& cRb = registry.Emplace<Rigidbody>(coin);
+		cRb.type = BodyType::Static;
+
+		auto& cCol = registry.Emplace<BoxCollider>(coin);
+		cCol.isTrigger = true; // IMPORTANT!
+
+		// THE MAGIC: Write the gameplay logic directly into the component!
+		// We capture the registry by reference [&registry] so we can modify the world.
+		cCol.onCollision = [&registry](Entity me, Entity other)
+			{
+				// In a real game, you'd check if 'other' is the player. 
+				// For now, if anything touches this coin, destroy it!
+				if (registry.IsAlive(me))
+				{
+					printf("Coin collected by Entity %d!\n", other.Index());
+					registry.Destroy(me);
+				}
+			};
+
+		// --- TEST PREFABS & PARTICLES ---
+
+	// 1. Spawn the entity using the JSON file!
+		Entity firePit = PrefabManager::Load(resPath + "fire_pit.json", registry, assets);
+
+		// 2. Attach a Particle Emitter and a Collider via C++ to complete it
+		if (registry.IsAlive(firePit))
+		{
+			// Give it a Box Collider so we can see it with F4 (Debug Draw)
+			auto& col = registry.Emplace<BoxCollider>(firePit);
+			col.width = 40.0f;
+			col.height = 40.0f;
+
+			// Attach the Particle Emitter!
+			auto& emitter = registry.Emplace<ParticleEmitter>(firePit);
+			emitter.isEmitting = true;
+			emitter.emitRate = 0.02f;         // Spit out a particle extremely fast
+			emitter.startColor = ORANGE;      // Fire colors
+			emitter.endColor = RED;
+			emitter.speed = 80.0f;            // Shoot out fast
+			emitter.particleLifetime = 0.8f;  // Burn out quickly
+		}
 	}
 
 	void Update(float deltaTime, Registry& registry, AssetManager& assets) override
@@ -74,7 +138,7 @@ public:
 			if (IsKeyDown(KEY_S)) rb.AddForce({ 0.0f, 2000.0f, 0.0f });
 			if (IsKeyDown(KEY_A)) rb.AddForce({ -2000.0f, 0.0f, 0.0f });
 			if (IsKeyDown(KEY_D)) rb.AddForce({ 2000.0f, 0.0f, 0.0f });
-
+			
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				// jump

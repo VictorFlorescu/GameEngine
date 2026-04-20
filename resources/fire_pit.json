@@ -1,0 +1,10 @@
+{
+  "Spatial": {
+    "pos": [ 200.0, 200.0, 0.0 ],
+    "scale": [ 1.0, 1.0, 1.0 ]
+  },
+  "Rigidbody": {
+    "mass": 0.0,
+    "type": "Static"
+  }
+}

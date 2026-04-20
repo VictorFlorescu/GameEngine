@@ -2,10 +2,14 @@
 #include "../ecs/Registry.h"
 #include "../scene/SceneManager.h"
 #include "../assets/AssetManager.h"
+#include "../assets/PrefabManager.h"
 #include "../systems/RenderSystem.h"
 #include "../systems/InputSystem.h"
 #include "../systems/PhysicsSystem.h"
 #include "../systems/AudioSystem.h"
+#include "../systems/AnimationSystem.h"
+#include "../systems/ParticleSystem.h"
+
 
 struct AppConfig
 {
@@ -48,6 +52,9 @@ private:
 	PhysicsSystem m_physics;
 	InputSystem m_input;
 	AudioSystem m_audio;
+	AnimationSystem m_animation;
+	ParticleSystem m_particles;
+
 	bool m_running = false;
 
 	bool m_showDebugTools = false;

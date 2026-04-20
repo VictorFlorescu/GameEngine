@@ -6,3 +6,5 @@ build/
 CMakeSettings.json
 Makefile
 /GameEngine.zip
+/.claude
+/TODO.txt

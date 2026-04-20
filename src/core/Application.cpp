@@ -36,6 +36,8 @@ void Application::Init()
 	m_physics = PhysicsSystem(&m_registry);
 	m_input = InputSystem();
 	m_audio = AudioSystem(&m_registry, &m_assets);
+	m_animation = AnimationSystem(&m_registry);
+	m_particles = ParticleSystem(&m_registry);
 }
 
 void Application::Shutdown()
@@ -74,6 +76,8 @@ void Application::Tick(float deltaTime)
 
 	BeginDrawing();
 	ClearBackground(BLACK);
+	m_animation.Update(deltaTime);
+	m_particles.Update(deltaTime);
 	m_render.Update(deltaTime);
 
 	if (m_showDebugTools)

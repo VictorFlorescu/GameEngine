@@ -89,7 +89,6 @@ private:
 	{
 		// Don't calculate collisions between static objects
 		if (a.rb->type == BodyType::Static && b.rb->type == BodyType::Static)  return;
-		if (a.col->isTrigger || b.col->isTrigger) return; // skip physical resolution for triggers
 
 		// Calculate centers 
 		// TODO: convert this and anything else that is required for this to work for 3D as well
@@ -112,6 +111,14 @@ private:
 			{
 				// collision confirmed
 				// find the axis of least penetration to push them out correctly
+
+				if (a.col->onCollision) a.col->onCollision(a.e, b.e);
+				if (b.col->onCollision) b.col->onCollision(b.e, a.e);
+
+				// if either object  is a trigger, stop here
+				if (a.col->isTrigger || b.col->isTrigger) return;
+				
+
 				Vector3 normal = { 0,0,0 };
 				float penetration = 0;
 

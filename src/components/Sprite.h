@@ -4,7 +4,7 @@
 struct Sprite
 {
 	Texture2D texture = {};
-	Rectangle srcRect = { 0,0,0,0 }; // source region - 0 means use full texture
+	Rectangle srcRect = { 0.0f,0.0f,0.0f,0.0f }; // source region - 0 means use full texture
 	Vector2 origin = { 0.5f, 0.5f }; // normalised pivot (0.5, 0.5 = centre)
 	Color tint = WHITE;
 	int layer = 0; // draw order - lower = behind
@@ -16,9 +16,11 @@ struct Sprite
 
 	Rectangle GetSrcRect() const
 	{
-		if (srcRect.width == 0 && srcRect.height == 0)
-			return { 0,0, static_cast<float>(texture.width), static_cast<float>(texture.height) };
-		return srcRect;
+		if (srcRect.width != 0 && srcRect.height != 0)
+			return srcRect;
+
+		// Default to the whole texture
+		return { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
 	}
 
 	// Pivot in pixels relative to the source rect

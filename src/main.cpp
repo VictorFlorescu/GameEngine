@@ -19,7 +19,10 @@ protected:
 			AudioSource,
 			BoxCollider,
 			Camera2DComponent,
-			Camera3DComponent
+			Camera3DComponent,
+			Animator2D,
+			ParticleEmitter,
+			Particle
 		>();
 
 		GetSceneManager().Push<GameplayScene>(GetRegistry(), GetAssets());
