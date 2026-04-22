@@ -25,7 +25,7 @@ protected:
 			Particle
 		>();
 
-		GetSceneManager().Push<GameplayScene>(GetRegistry(), GetAssets());
+		GetSceneManager().Push<Sandbox3DScene>(GetRegistry(), GetAssets());
 	}
 
 	void OnUpdate(float deltaTime) override

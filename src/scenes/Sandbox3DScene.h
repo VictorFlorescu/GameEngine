@@ -32,6 +32,15 @@ public:
 		auto& cubeMesh = registry.Emplace<MeshRenderer>(cube);
 		cubeMesh = MeshRenderer::FromMesh(GenMeshCube(1.0f, 1.0f, 1.0f));
 		cubeMesh.tint = RED;
+
+		auto& cubeRb = registry.Emplace<Rigidbody>(cube);
+		cubeRb.type = BodyType::Dynamic;
+		cubeRb.mass = 5.0f;
+
+		auto& cubeCol = registry.Emplace<BoxCollider>(cube);
+		cubeCol.width = 1.0f;
+		cubeCol.height = 1.0f;
+		cubeCol.depth = 1.0f;
 	}
 
 	void OnExit(Registry& registry, AssetManager& assets) override

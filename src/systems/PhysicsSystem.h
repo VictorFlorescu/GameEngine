@@ -5,6 +5,14 @@
 #include <vector>
 #include <algorithm>
 
+struct RaycastHit
+{
+	bool hit = false;
+	Entity entity = Entity::Null;
+	Vector3 point = { 0,0,0 };
+	Vector3 normal = { 0,0,0 };
+	float distance = 0.0f;
+};
 
 
 class PhysicsSystem
@@ -77,6 +85,37 @@ public:
 		}
 	}
 
+	RaycastHit Raycast(Ray ray, float maxDistance = 1000.f)
+	{
+		if (!m_registry) return RaycastHit{};
+		RaycastHit closestHit;
+		closestHit.distance = maxDistance;
+
+		// check the ray against every boxcollider in the world - this is not very efficient but it's simple and works for demonstration purposes, so we'll optimize it later if we need to
+		m_registry->View<Spatial, BoxCollider>([&](Entity e, Spatial& t, BoxCollider& col)
+			{
+				// construct a bounding box for the collider
+				Vector3 center = { t.position.x + col.offset.x, t.position.y + col.offset.y, t.position.z + col.offset.z };
+				Vector3 half = { (col.width / 2.0f) * t.scale.x, (col.height / 2.0f) * t.scale.y, (col.depth / 2.0f) * t.scale.z };
+
+				BoundingBox box = { Vector3Subtract(center, half), Vector3Add(center, half) };
+
+				// Raylib's built-in 3D ray collision math
+				RayCollision collision = GetRayCollisionBox(ray, box);
+
+				if (collision.hit && collision.distance < closestHit.distance)
+				{
+					closestHit.hit = true;
+					closestHit.entity = e;
+					closestHit.point = collision.point;
+					closestHit.normal = collision.normal;
+					closestHit.distance = collision.distance;
+				}
+			});
+
+		return closestHit;
+	}
+
 	void SetSleepThreshold(float speed) { m_sleepThresholdSq = speed * speed; }
 
 private:
@@ -92,12 +131,12 @@ private:
 
 		// Calculate centers 
 		// TODO: convert this and anything else that is required for this to work for 3D as well
-		Vector3 centerA = { a.t->position.x + a.col->offset.x, a.t->position.y + a.col->offset.y, /*z?*/ 0.0f };
-		Vector3 centerB = { b.t->position.x + b.col->offset.x, b.t->position.y + b.col->offset.y, /*z?*/ 0.0f };
+		Vector3 centerA = { a.t->position.x + a.col->offset.x, a.t->position.y + a.col->offset.y, a.t->position.z + a.col->offset.z };
+		Vector3 centerB = { b.t->position.x + b.col->offset.x, b.t->position.y + b.col->offset.y, b.t->position.z + b.col->offset.z };
 
 		// Calculate half-extents (accounting for Spatial scale)
-		Vector2 halfA = { (a.col->width / 2.0f) * a.t->scale.x, (a.col->height / 2.0f) * a.t->scale.y };
-		Vector2 halfB = { (b.col->width / 2.0f) * b.t->scale.x, (b.col->height / 2.0f) * b.t->scale.y };
+		Vector3 halfA = { (a.col->width / 2.0f) * a.t->scale.x, (a.col->height / 2.0f) * a.t->scale.y, (a.col->depth / 2.0f) * a.t->scale.z };
+		Vector3 halfB = { (b.col->width / 2.0f) * b.t->scale.x, (b.col->height / 2.0f) * b.t->scale.y, (b.col->depth / 2.0f) * b.t->scale.z };
 
 		Vector3 delta = Vector3Subtract(centerB, centerA);
 
@@ -109,6 +148,7 @@ private:
 			float overlapY = (halfA.y + halfB.y) - fabsf(delta.y);
 			if (overlapY > 0)
 			{
+				float overlapZ = (halfA.z + halfB.z) - fabsf(delta.z);
 				// collision confirmed
 				// find the axis of least penetration to push them out correctly
 
@@ -127,10 +167,15 @@ private:
 					normal.x = delta.x < 0 ? -1.0f : 1.0f;
 					penetration = overlapX;
 				}
-				else
+				else if (overlapY < overlapX && overlapY < overlapZ)
 				{
 					normal.y = delta.y < 0 ? -1.0f : 1.0f;
 					penetration = overlapY;
+				}
+				else
+				{
+					normal.z = delta.z< 0 ? -1.0f : 1.0f;
+					penetration = overlapZ;
 				}
 
 				float invA = a.rb->InverseMass();
